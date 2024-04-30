@@ -28,7 +28,7 @@ public class ProductsController : ControllerBase
         return products;
     }
 
-    [HttpGet("/category/{id:int}")]
+    [HttpGet("category/{id:int}")]
     public ActionResult<IEnumerable<Product>> GetProductbyCategory(int id)
     {
         var products = _context.Products.Include(p => p.Category).Where(p => p.CategoryId == id).AsNoTracking().ToList();
