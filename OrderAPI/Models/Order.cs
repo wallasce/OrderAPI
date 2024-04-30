@@ -11,10 +11,11 @@ public class Order
     public int OrderId { get; set; }
 
     [Required]
-    public long CPF { get; set; }
+    [StringLength(15)]
+    public string CPF { get; set; }
 
     [Required]
-    public int Tabble { get; set; }
+    public int Table { get; set; }
     
     public enum States
     {
