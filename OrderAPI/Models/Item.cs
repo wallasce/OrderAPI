@@ -14,5 +14,7 @@ public class Item
         DELIVERED,
     }
 
-    public States state { get; set; }
+    public States State { get; set; }
+    public int OrderId { get; set; }
+    public Order Order { get; set; }
 }
