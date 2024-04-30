@@ -6,7 +6,7 @@ using OrderAPI.Models;
 
 namespace OrderAPI.Controllers;
 
-[Route("[controller]")]
+[Route("api/[controller]")]
 [ApiController]
 public class ProductsController : ControllerBase
 {
@@ -28,7 +28,7 @@ public class ProductsController : ControllerBase
         return products;
     }
 
-    [HttpGet("category/{id:int}")]
+    [HttpGet("category/{id:int:min(1)}")]
     public ActionResult<IEnumerable<Product>> GetProductbyCategory(int id)
     {
         var products = _context.Products.Include(p => p.Category).Where(p => p.CategoryId == id).AsNoTracking().ToList();
@@ -50,7 +50,7 @@ public class ProductsController : ControllerBase
         return products;
     }
 
-    [HttpGet("{id:int}", Name ="getProduct")]
+    [HttpGet("{id:int:min(1)}", Name ="getProduct")]
     public ActionResult<Product> Get(int id)
     {
         var product = _context.Products.FirstOrDefault(p => p.ProductId == id);
@@ -76,7 +76,7 @@ public class ProductsController : ControllerBase
             new { id = product.ProductId }, product);
     }
 
-    [HttpPut("products/{id:int}")]
+    [HttpPut("products/{id:int:min(1)}")]
     public ActionResult Put(int id, Product product)
     {
         if (id != product.ProductId)
@@ -90,7 +90,7 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:int:min(1)}")]
     public ActionResult Delete(int id) 
     {
         var product = _context.Products.FirstOrDefault(p => p.ProductId == id);
