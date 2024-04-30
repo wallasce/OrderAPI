@@ -20,7 +20,7 @@ public class ProductsController : ControllerBase
     [HttpGet("products")]
     public ActionResult<IEnumerable<Product>> GetProduct()
     {
-        var products = _context.Products.Include(p => p.Category).ToList();
+        var products = _context.Products.Include(p => p.Category).AsNoTracking().ToList();
         if (products is null)
         {
             return NotFound("Any product is available");
@@ -31,7 +31,7 @@ public class ProductsController : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<Product>> Get()
     {
-        var products = _context.Products.ToList();
+        var products = _context.Products.AsNoTracking().ToList();
         if(products is null)
         {
             return NotFound("Any product is available");

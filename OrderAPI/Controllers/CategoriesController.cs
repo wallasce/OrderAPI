@@ -20,7 +20,7 @@ public class CategoriesController : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<Category>> Get()
     {
-        var categories = _context.Categories.ToList();
+        var categories = _context.Categories.AsNoTracking().ToList();
         if (categories is null)
         {
             return NotFound("No one category was founded.");
