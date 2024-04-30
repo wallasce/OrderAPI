@@ -18,9 +18,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("products")]
-    public ActionResult<IEnumerable<Product>> GetProduct()
+    public async Task<ActionResult<IEnumerable<Product>>> GetProduct()
     {
-        var products = _context.Products.Include(p => p.Category).AsNoTracking().ToList();
+        var products = await _context.Products.Include(p => p.Category).AsNoTracking().ToListAsync();
         if (products is null)
         {
             return NotFound("No products is available");
@@ -29,9 +29,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("category/{id:int:min(1)}")]
-    public ActionResult<IEnumerable<Product>> GetProductbyCategory(int id)
+    public async Task<ActionResult<IEnumerable<Product>>> GetProductbyCategory(int id)
     {
-        var products = _context.Products.Include(p => p.Category).Where(p => p.CategoryId == id).AsNoTracking().ToList();
+        var products = await _context.Products.Include(p => p.Category).Where(p => p.CategoryId == id).AsNoTracking().ToListAsync();
         if (products is null)
         {
             return NotFound($"No products with category id = {id} is available");
@@ -40,9 +40,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Product>> Get()
+    public async Task<ActionResult<IEnumerable<Product>>> Get()
     {
-        var products = _context.Products.AsNoTracking().ToList();
+        var products = await _context.Products.AsNoTracking().ToListAsync();
         if(products is null)
         {
             return NotFound("No products is available");
@@ -51,9 +51,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}", Name ="getProduct")]
-    public ActionResult<Product> Get(int id)
+    public async Task<ActionResult<Product>> Get(int id)
     {
-        var product = _context.Products.FirstOrDefault(p => p.ProductId == id);
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
         if(product == null)
         {
             return NotFound($"Product with id {id} not found");
