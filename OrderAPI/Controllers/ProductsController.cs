@@ -23,7 +23,18 @@ public class ProductsController : ControllerBase
         var products = _context.Products.Include(p => p.Category).AsNoTracking().ToList();
         if (products is null)
         {
-            return NotFound("Any product is available");
+            return NotFound("No products is available");
+        }
+        return products;
+    }
+
+    [HttpGet("/category/{id:int}")]
+    public ActionResult<IEnumerable<Product>> GetProductbyCategory(int id)
+    {
+        var products = _context.Products.Include(p => p.Category).Where(p => p.CategoryId == id).AsNoTracking().ToList();
+        if (products is null)
+        {
+            return NotFound($"No products with category id = {id} is available");
         }
         return products;
     }
@@ -34,7 +45,7 @@ public class ProductsController : ControllerBase
         var products = _context.Products.AsNoTracking().ToList();
         if(products is null)
         {
-            return NotFound("Any product is available");
+            return NotFound("No products is available");
         }
         return products;
     }
@@ -45,7 +56,7 @@ public class ProductsController : ControllerBase
         var product = _context.Products.FirstOrDefault(p => p.ProductId == id);
         if(product == null)
         {
-            return NotFound("Product with id:" + id + " not found");
+            return NotFound($"Product with id {id} not found");
         }
         return product;
     }
@@ -55,7 +66,7 @@ public class ProductsController : ControllerBase
     {
         if(product == null)
         {
-            return BadRequest();
+            return BadRequest("Product parameter is null");
         }
 
         _context.Products.Add(product);
@@ -70,7 +81,7 @@ public class ProductsController : ControllerBase
     {
         if (id != product.ProductId)
         {
-            return BadRequest();
+            return BadRequest($"ProductId {id} is not equal to id in Product");
         }
 
         _context.Entry(product).State = EntityState.Modified;
@@ -86,7 +97,7 @@ public class ProductsController : ControllerBase
 
         if (product is null)
         {
-            return NotFound("Product with id " + id + " not found");
+            return NotFound($"Product with id {id} not found");
         }
 
         _context.Products.Remove(product);

@@ -23,7 +23,7 @@ public class CategoriesController : ControllerBase
         var categories = _context.Categories.AsNoTracking().ToList();
         if (categories is null)
         {
-            return NotFound("No one category was founded.");
+            return NotFound("No categories was founded.");
         }
         return categories;
     }
@@ -34,7 +34,7 @@ public class CategoriesController : ControllerBase
         var category = _context.Categories.FirstOrDefault(p => p.CategoryId == id);
         if (category == null)
         {
-            return NotFound("Category with id: " + id + " not found");
+            return NotFound($"Product with id {id} not found");
         }
         return Ok(category);
     }
@@ -44,7 +44,7 @@ public class CategoriesController : ControllerBase
     {
         if (category == null)
         {
-            return BadRequest();
+            return BadRequest("Category Param is null");
         }
 
         _context.Categories.Add(category);
@@ -59,7 +59,7 @@ public class CategoriesController : ControllerBase
     {
         if (id != category.CategoryId)
         {
-            return BadRequest();
+            return BadRequest($"CategoryId {id} is not equal to id in Category");
         }
 
         _context.Entry(category).State = EntityState.Modified;
@@ -75,7 +75,7 @@ public class CategoriesController : ControllerBase
 
         if (category == null)
         {
-            return NotFound("Category with id: " + id + " not found");
+            return NotFound($"Product with id {id} not found");
         }
 
         _context.Categories.Remove(category);
