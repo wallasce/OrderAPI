@@ -15,7 +15,6 @@ public class Item
     [Required]
     public int Quantity { get; set; }
 
-    [Required]
     [StringLength(200)]
     public string Observation { get; set; }
 
