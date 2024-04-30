@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace OrderAPI.Models;
 
@@ -11,6 +12,8 @@ public class Product
     
     [Required]
     public int CategoryId { get; set; }
+    
+    [JsonIgnore]
     public Category Category { get; set; }
 
     [Required]
