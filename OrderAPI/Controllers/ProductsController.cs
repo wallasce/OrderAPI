@@ -17,6 +17,17 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
+    [HttpGet("products")]
+    public ActionResult<IEnumerable<Product>> GetProduct()
+    {
+        var products = _context.Products.Include(p => p.Category).ToList();
+        if (products is null)
+        {
+            return NotFound("Any product is available");
+        }
+        return products;
+    }
+
     [HttpGet]
     public ActionResult<IEnumerable<Product>> Get()
     {
