@@ -19,7 +19,7 @@ public class RepositoryCRUD<T> : IRepositoryCRUDBase<T> where T : class
         return _context.Set<T>().ToList();
     }
 
-    public T? Get(Expression<Func<T, bool>> predicate)
+    public T Get(Expression<Func<T, bool>> predicate)
     {
         return _context.Set<T>().FirstOrDefault(predicate);
     }
