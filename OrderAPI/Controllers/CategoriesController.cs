@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderAPI.Context;
 using OrderAPI.Models;
+using OrderAPI.Validations;
 
 namespace OrderAPI.Controllers;
 
@@ -45,6 +47,20 @@ public class CategoriesController : ControllerBase
         if (category == null)
         {
             return BadRequest("Category Param is null");
+        }
+
+        var validation = new CategoryValidator()
+            .RuleName()
+            .Validate(category);
+
+        if (!validation.IsValid)
+        {
+            string errorStr = "";
+            foreach (var error in validation.Errors)
+            {
+                errorStr += error + "\n";
+            }
+            return BadRequest(errorStr);
         }
 
         _context.Categories.Add(category);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderAPI.Context;
 using OrderAPI.Models;
+using OrderAPI.Validations;
 
 namespace OrderAPI.Controllers;
 
@@ -69,6 +70,25 @@ public class ProductsController : ControllerBase
             return BadRequest("Product parameter is null");
         }
 
+        
+        var validation = new ProductValidator()
+            .RuleCategoryId()
+            .RuleName()
+            .RuleDescription()
+            .RulePrice()
+            .RuleServes()
+            .Validate(product);
+
+        if(!validation.IsValid)
+        {
+            string errorStr = "";
+            foreach (var error in validation.Errors)
+            {
+                errorStr += error + "\n";
+            }
+            return BadRequest(errorStr);
+        }
+
         _context.Products.Add(product);
         _context.SaveChanges();
 
@@ -82,6 +102,24 @@ public class ProductsController : ControllerBase
         if (id != product.ProductId)
         {
             return BadRequest($"ProductId {id} is not equal to id in Product");
+        }
+
+        var validation = new ProductValidator()
+            .RuleCategoryId()
+            .RuleName()
+            .RuleDescription()
+            .RulePrice()
+            .RuleServes()
+            .Validate(product);
+
+        if (!validation.IsValid)
+        {
+            string errorStr = "";
+            foreach (var error in validation.Errors)
+            {
+                errorStr += error + "\n";
+            }
+            return BadRequest(errorStr);
         }
 
         _context.Entry(product).State = EntityState.Modified;
