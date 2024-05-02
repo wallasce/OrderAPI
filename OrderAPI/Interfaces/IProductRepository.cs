@@ -4,5 +4,5 @@ namespace OrderAPI.Interfaces;
 
 public interface IProductRepository : ICRUDRepository<Product>
 {
-    IEnumerable<Product> GetProductById(int id);
+    IEnumerable<Product> GetProductByCategoryId(int id);
 }

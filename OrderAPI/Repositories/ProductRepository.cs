@@ -11,8 +11,8 @@ public class ProductRepository : CRUDRepository<Product>, IProductRepository
         
     }
 
-    public IEnumerable<Product> GetProductById(int id)
+    public IEnumerable<Product> GetProductByCategoryId(int id)
     {
-        return GetAll().Where(p => p.ProductId == id);
+        return GetAll().Where(p => p.CategoryId == id);
     }
 }
