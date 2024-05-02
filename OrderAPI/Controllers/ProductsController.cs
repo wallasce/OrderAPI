@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderAPI.Context;
 using OrderAPI.Models;
+using OrderAPI.Validations;
 
 namespace OrderAPI.Controllers;
 
@@ -18,9 +19,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("products")]
-    public ActionResult<IEnumerable<Product>> GetProduct()
+    public async Task<ActionResult<IEnumerable<Product>>> GetProduct()
     {
-        var products = _context.Products.Include(p => p.Category).AsNoTracking().ToList();
+        var products = await _context.Products.Include(p => p.Category).AsNoTracking().ToListAsync();
         if (products is null)
         {
             return NotFound("No products is available");
@@ -29,9 +30,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("category/{id:int:min(1)}")]
-    public ActionResult<IEnumerable<Product>> GetProductbyCategory(int id)
+    public async Task<ActionResult<IEnumerable<Product>>> GetProductbyCategory(int id)
     {
-        var products = _context.Products.Include(p => p.Category).Where(p => p.CategoryId == id).AsNoTracking().ToList();
+        var products = await _context.Products.Include(p => p.Category).Where(p => p.CategoryId == id).AsNoTracking().ToListAsync();
         if (products is null)
         {
             return NotFound($"No products with category id = {id} is available");
@@ -40,9 +41,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Product>> Get()
+    public async Task<ActionResult<IEnumerable<Product>>> Get()
     {
-        var products = _context.Products.AsNoTracking().ToList();
+        var products = await _context.Products.AsNoTracking().ToListAsync();
         if(products is null)
         {
             return NotFound("No products is available");
@@ -51,9 +52,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}", Name ="getProduct")]
-    public ActionResult<Product> Get(int id)
+    public async Task<ActionResult<Product>> Get(int id)
     {
-        var product = _context.Products.FirstOrDefault(p => p.ProductId == id);
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
         if(product == null)
         {
             return NotFound($"Product with id {id} not found");
@@ -69,6 +70,25 @@ public class ProductsController : ControllerBase
             return BadRequest("Product parameter is null");
         }
 
+        
+        var validation = new ProductValidator()
+            .RuleCategoryId()
+            .RuleName()
+            .RuleDescription()
+            .RulePrice()
+            .RuleServes()
+            .Validate(product);
+
+        if(!validation.IsValid)
+        {
+            string errorStr = "";
+            foreach (var error in validation.Errors)
+            {
+                errorStr += error + "\n";
+            }
+            return BadRequest(errorStr);
+        }
+
         _context.Products.Add(product);
         _context.SaveChanges();
 
@@ -82,6 +102,24 @@ public class ProductsController : ControllerBase
         if (id != product.ProductId)
         {
             return BadRequest($"ProductId {id} is not equal to id in Product");
+        }
+
+        var validation = new ProductValidator()
+            .RuleCategoryId()
+            .RuleName()
+            .RuleDescription()
+            .RulePrice()
+            .RuleServes()
+            .Validate(product);
+
+        if (!validation.IsValid)
+        {
+            string errorStr = "";
+            foreach (var error in validation.Errors)
+            {
+                errorStr += error + "\n";
+            }
+            return BadRequest(errorStr);
         }
 
         _context.Entry(product).State = EntityState.Modified;

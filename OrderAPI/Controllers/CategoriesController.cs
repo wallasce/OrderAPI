@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderAPI.Context;
 using OrderAPI.Models;
+using OrderAPI.Validations;
 
 namespace OrderAPI.Controllers;
 
@@ -18,9 +20,9 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Category>> Get()
+    public async Task<ActionResult<IEnumerable<Category>>> Get()
     {
-        var categories = _context.Categories.AsNoTracking().ToList();
+        var categories = await _context.Categories.AsNoTracking().ToListAsync();
         if (categories is null)
         {
             return NotFound("No categories was founded.");
@@ -29,9 +31,9 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
-    public ActionResult<Category> Get(int id)
+    public async Task<ActionResult<Category>> Get(int id)
     {
-        var category = _context.Categories.FirstOrDefault(p => p.CategoryId == id);
+        var category = await _context.Categories.FirstOrDefaultAsync(p => p.CategoryId == id);
         if (category == null)
         {
             return NotFound($"Product with id {id} not found");
@@ -45,6 +47,20 @@ public class CategoriesController : ControllerBase
         if (category == null)
         {
             return BadRequest("Category Param is null");
+        }
+
+        var validation = new CategoryValidator()
+            .RuleName()
+            .Validate(category);
+
+        if (!validation.IsValid)
+        {
+            string errorStr = "";
+            foreach (var error in validation.Errors)
+            {
+                errorStr += error + "\n";
+            }
+            return BadRequest(errorStr);
         }
 
         _context.Categories.Add(category);
