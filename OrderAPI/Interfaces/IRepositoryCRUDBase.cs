@@ -1,4 +1,4 @@
-﻿namespace OrderAPI.Repositories;
+﻿namespace OrderAPI.Interfaces;
 
 public interface IRepositoryCRUDBase<T>
 {
