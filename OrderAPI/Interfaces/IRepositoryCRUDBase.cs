@@ -1,9 +1,11 @@
-﻿namespace OrderAPI.Interfaces;
+﻿using System.Linq.Expressions;
+
+namespace OrderAPI.Interfaces;
 
 public interface IRepositoryCRUDBase<T>
 {
     IEnumerable<T> GetAll();
-    T Get(int id);
+    T? Get(Expression<Func<T, bool>> predicate);
     T Create(T entity);
     T Update(T entity);
     T Delete(T entity);
