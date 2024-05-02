@@ -2,7 +2,7 @@
 
 namespace OrderAPI.Interfaces;
 
-public interface IRepositoryCRUDBase<T>
+public interface ICRUDRepository<T>
 {
     IEnumerable<T> GetAll();
     T? Get(Expression<Func<T, bool>> predicate);

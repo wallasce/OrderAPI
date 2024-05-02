@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 
 namespace OrderAPI.Repositories;
 
-public class RepositoryCRUD<T> : IRepositoryCRUDBase<T> where T : class
+public class CRUDRepository<T> : ICRUDRepository<T> where T : class
 {
     protected readonly AppDbContext _context;
 
-    public RepositoryCRUD(AppDbContext context)
+    public CRUDRepository(AppDbContext context)
     {
         _context = context;
     }
