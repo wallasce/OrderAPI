@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderAPI.Context;
+using OrderAPI.Filters;
 using OrderAPI.Models;
 using OrderAPI.Validations;
 
@@ -20,6 +21,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
+    [ServiceFilter(typeof(ApiLoggingFilter))]
     public async Task<ActionResult<IEnumerable<Category>>> Get()
     {
         var categories = await _context.Categories.AsNoTracking().ToListAsync();
