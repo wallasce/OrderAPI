@@ -30,6 +30,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ApiLoggingFilter>();
 
 builder.Services.AddScoped(typeof(ICRUDRepository<>), typeof(CRUDRepository<>));
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 var app = builder.Build();
 
