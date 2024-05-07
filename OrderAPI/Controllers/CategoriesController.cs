@@ -1,9 +1,6 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OrderAPI.Context;
+﻿using Microsoft.AspNetCore.Mvc;
 using OrderAPI.Filters;
+using OrderAPI.Interfaces;
 using OrderAPI.Models;
 using OrderAPI.Validations;
 
@@ -13,29 +10,29 @@ namespace OrderAPI.Controllers;
 [ApiController]
 public class CategoriesController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CategoriesController(AppDbContext context)
+    public CategoriesController(IUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     [HttpGet]
     [ServiceFilter(typeof(ApiLoggingFilter))]
-    public async Task<ActionResult<IEnumerable<Category>>> Get()
+    public ActionResult<IEnumerable<Category>> Get()
     {
-        var categories = await _context.Categories.AsNoTracking().ToListAsync();
+        var categories = _unitOfWork.CategoryRepository.GetAll();
         if (categories is null)
         {
             return NotFound("No categories was founded.");
         }
-        return categories;
+        return Ok(categories);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
-    public async Task<ActionResult<Category>> Get(int id)
+    public ActionResult<Category> Get(int id)
     {
-        var category = await _context.Categories.FirstOrDefaultAsync(p => p.CategoryId == id);
+        var category = _unitOfWork.CategoryRepository.Get(c => c.CategoryId == id);
         if (category == null)
         {
             return NotFound($"Product with id {id} not found");
@@ -65,11 +62,11 @@ public class CategoriesController : ControllerBase
             return BadRequest(errorStr);
         }
 
-        _context.Categories.Add(category);
-        _context.SaveChanges();
+        var categoryCreated = _unitOfWork.CategoryRepository.Create(category);
+        _unitOfWork.Commit();
 
         return new CreatedAtRouteResult("GetCategory",
-            new { id = category.CategoryId }, category);
+            new { id = category.CategoryId }, categoryCreated);
     }
 
     [HttpPut("{id:int:min(1)}")]
@@ -80,24 +77,39 @@ public class CategoriesController : ControllerBase
             return BadRequest($"CategoryId {id} is not equal to id in Category");
         }
 
-        _context.Entry(category).State = EntityState.Modified;
-        _context.SaveChanges();
+        var validation = new CategoryValidator()
+            .RuleName()
+            .Validate(category);
 
-        return Ok(category);
+        if (!validation.IsValid)
+        {
+            string errorStr = "";
+            foreach (var error in validation.Errors)
+            {
+                errorStr += error + "\n";
+            }
+            return BadRequest(errorStr);
+        }
+
+        var categoryChaged = _unitOfWork.CategoryRepository.Update(category);
+        _unitOfWork.Commit();
+
+        return Ok(categoryChaged);
     }
 
     [HttpDelete("{id:int:min(1)}")]
     public ActionResult Delete(int id)
     {
-        var category = _context.Categories.FirstOrDefault(p => p.CategoryId == id);
+        var category = _unitOfWork.CategoryRepository.Get(c =>  c.CategoryId == id);
 
         if (category == null)
         {
             return NotFound($"Product with id {id} not found");
         }
 
-        _context.Categories.Remove(category);
-        _context.SaveChanges();
-        return Ok();
+        var categoryDeleted = _unitOfWork.CategoryRepository.Delete(category);
+        _unitOfWork.Commit();
+
+        return Ok(categoryDeleted);
     }
 }

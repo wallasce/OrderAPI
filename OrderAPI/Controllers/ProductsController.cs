@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OrderAPI.Context;
+﻿using Microsoft.AspNetCore.Mvc;
+using OrderAPI.Interfaces;
 using OrderAPI.Models;
 using OrderAPI.Validations;
 
@@ -11,50 +9,39 @@ namespace OrderAPI.Controllers;
 [ApiController]
 public class ProductsController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ProductsController(AppDbContext context)
+    public ProductsController(IUnitOfWork unitOfWork)
     {
-        _context = context;
-    }
-
-    [HttpGet("products")]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProduct()
-    {
-        var products = await _context.Products.Include(p => p.Category).AsNoTracking().ToListAsync();
-        if (products is null)
-        {
-            return NotFound("No products is available");
-        }
-        return products;
+        _unitOfWork = unitOfWork;
     }
 
     [HttpGet("category/{id:int:min(1)}")]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProductbyCategory(int id)
+    public ActionResult<IEnumerable<Product>> GetProductbyCategory(int id)
     {
-        var products = await _context.Products.Include(p => p.Category).Where(p => p.CategoryId == id).AsNoTracking().ToListAsync();
+        var products = _unitOfWork.ProductRepository.GetProductByCategoryId(id);
         if (products is null)
         {
             return NotFound($"No products with category id = {id} is available");
         }
-        return products;
+        return Ok(products);
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> Get()
+    public ActionResult<IEnumerable<Product>> Get()
     {
-        var products = await _context.Products.AsNoTracking().ToListAsync();
+        var products = _unitOfWork.ProductRepository.GetAll();
         if(products is null)
         {
             return NotFound("No products is available");
         }
-        return products;
+        return Ok(products);
     }
 
     [HttpGet("{id:int:min(1)}", Name ="getProduct")]
-    public async Task<ActionResult<Product>> Get(int id)
+    public ActionResult<Product> Get(int id)
     {
-        var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
+        var product = _unitOfWork.ProductRepository.Get(p => p.ProductId == id);
         if(product == null)
         {
             return NotFound($"Product with id {id} not found");
@@ -89,14 +76,14 @@ public class ProductsController : ControllerBase
             return BadRequest(errorStr);
         }
 
-        _context.Products.Add(product);
-        _context.SaveChanges();
+        var productCreated = _unitOfWork.ProductRepository.Create(product);
+        _unitOfWork.Commit();
 
         return new CreatedAtRouteResult("GetProduct", 
-            new { id = product.ProductId }, product);
+            new { id = product.ProductId }, productCreated);
     }
 
-    [HttpPut("products/{id:int:min(1)}")]
+    [HttpPut("{id:int:min(1)}")]
     public ActionResult Put(int id, Product product)
     {
         if (id != product.ProductId)
@@ -122,25 +109,25 @@ public class ProductsController : ControllerBase
             return BadRequest(errorStr);
         }
 
-        _context.Entry(product).State = EntityState.Modified;
-        _context.SaveChanges();
+        var productChanged = _unitOfWork.ProductRepository.Update(product);
+        _unitOfWork.Commit();
 
-        return Ok(product);
+        return Ok(productChanged);
     }
 
     [HttpDelete("{id:int:min(1)}")]
     public ActionResult Delete(int id) 
     {
-        var product = _context.Products.FirstOrDefault(p => p.ProductId == id);
+        var product = _unitOfWork.ProductRepository.Get(p => p.ProductId == id);
 
         if (product is null)
         {
             return NotFound($"Product with id {id} not found");
         }
 
-        _context.Products.Remove(product);
-        _context.SaveChanges();
+        var productDeleted = _unitOfWork.ProductRepository.Delete(product);
+        _unitOfWork.Commit();
 
-        return Ok(product);
+        return Ok(productDeleted);
     }
 }
