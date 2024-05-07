@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using OrderAPI.DTOs;
 using OrderAPI.Interfaces;
 using OrderAPI.Models;
 using OrderAPI.Validations;
@@ -10,53 +12,60 @@ namespace OrderAPI.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public ProductsController(IUnitOfWork unitOfWork)
+    public ProductsController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     [HttpGet("category/{id:int:min(1)}")]
-    public ActionResult<IEnumerable<Product>> GetProductbyCategory(int id)
+    public ActionResult<IEnumerable<ProductDTO>> GetProductbyCategory(int id)
     {
         var products = _unitOfWork.ProductRepository.GetProductByCategoryId(id);
         if (products is null)
         {
             return NotFound($"No products with category id = {id} is available");
         }
-        return Ok(products);
+
+        var productsDto = _mapper.Map<IEnumerable<ProductDTO>>(products);
+        return Ok(productsDto);
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Product>> Get()
+    public ActionResult<IEnumerable<ProductDTO>> Get()
     {
         var products = _unitOfWork.ProductRepository.GetAll();
         if(products is null)
         {
             return NotFound("No products is available");
         }
-        return Ok(products);
+
+        var productsDto = _mapper.Map<IEnumerable<ProductDTO>>(products);
+        return Ok(productsDto);
     }
 
     [HttpGet("{id:int:min(1)}", Name ="getProduct")]
-    public ActionResult<Product> Get(int id)
+    public ActionResult<ProductDTO> Get(int id)
     {
         var product = _unitOfWork.ProductRepository.Get(p => p.ProductId == id);
         if(product == null)
         {
             return NotFound($"Product with id {id} not found");
         }
-        return product;
+        
+        var productDto = _mapper.Map<ProductDTO>(product);
+        return productDto;
     }
 
     [HttpPost]
-    public ActionResult Post(Product product)
+    public ActionResult<ProductDTO> Post(ProductDTO productDto)
     {
-        if(product == null)
-        {
+        if (productDto == null)
             return BadRequest("Product parameter is null");
-        }
-
+        
+        var product = _mapper.Map<Product>(productDto);
         
         var validation = new ProductValidator()
             .RuleCategoryId()
@@ -79,17 +88,20 @@ public class ProductsController : ControllerBase
         var productCreated = _unitOfWork.ProductRepository.Create(product);
         _unitOfWork.Commit();
 
+        var newProductDto = _mapper.Map<ProductDTO>(productCreated);
         return new CreatedAtRouteResult("GetProduct", 
-            new { id = product.ProductId }, productCreated);
+            new { id = newProductDto.ProductId }, newProductDto);
     }
 
     [HttpPut("{id:int:min(1)}")]
-    public ActionResult Put(int id, Product product)
+    public ActionResult<ProductDTO> Put(int id, ProductDTO productDto)
     {
-        if (id != product.ProductId)
+        if (id != productDto.ProductId)
         {
             return BadRequest($"ProductId {id} is not equal to id in Product");
         }
+
+        var product = _mapper.Map<Product>(productDto);
 
         var validation = new ProductValidator()
             .RuleCategoryId()
@@ -112,11 +124,12 @@ public class ProductsController : ControllerBase
         var productChanged = _unitOfWork.ProductRepository.Update(product);
         _unitOfWork.Commit();
 
-        return Ok(productChanged);
+        var productChangedDto = _mapper.Map<ProductDTO>(productChanged);
+        return Ok(productChangedDto);
     }
 
     [HttpDelete("{id:int:min(1)}")]
-    public ActionResult Delete(int id) 
+    public ActionResult<ProductDTO> Delete(int id) 
     {
         var product = _unitOfWork.ProductRepository.Get(p => p.ProductId == id);
 
@@ -128,6 +141,7 @@ public class ProductsController : ControllerBase
         var productDeleted = _unitOfWork.ProductRepository.Delete(product);
         _unitOfWork.Commit();
 
-        return Ok(productDeleted);
+        var productDeletedDto = _mapper.Map<ProductDTO>(productDeleted);
+        return Ok(productDeletedDto);
     }
 }
