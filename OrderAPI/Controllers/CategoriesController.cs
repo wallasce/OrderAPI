@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using OrderAPI.DTOs;
 using OrderAPI.Filters;
 using OrderAPI.Interfaces;
 using OrderAPI.Models;
@@ -11,42 +13,50 @@ namespace OrderAPI.Controllers;
 public class CategoriesController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public CategoriesController(IUnitOfWork unitOfWork)
+    public CategoriesController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     [HttpGet]
     [ServiceFilter(typeof(ApiLoggingFilter))]
-    public ActionResult<IEnumerable<Category>> Get()
+    public ActionResult<IEnumerable<CategoryDTO>> Get()
     {
         var categories = _unitOfWork.CategoryRepository.GetAll();
         if (categories is null)
         {
             return NotFound("No categories was founded.");
         }
-        return Ok(categories);
+
+        var categoriesDto = _mapper.Map<IEnumerable<CategoryDTO>>(categories);
+        return Ok(categoriesDto);
     }
 
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
-    public ActionResult<Category> Get(int id)
+    public ActionResult<CategoryDTO> Get(int id)
     {
         var category = _unitOfWork.CategoryRepository.Get(c => c.CategoryId == id);
         if (category == null)
         {
             return NotFound($"Product with id {id} not found");
         }
-        return Ok(category);
+
+        var categoryDto = _mapper.Map<CategoryDTO>(category);
+        return Ok(categoryDto);
     }
 
     [HttpPost]
-    public ActionResult Post(Category category)
+    public ActionResult<CategoryDTO> Post(CategoryDTO categoryDto)
     {
-        if (category == null)
+        if (categoryDto == null)
         {
             return BadRequest("Category Param is null");
         }
+
+        var category = _mapper.Map<Category>(categoryDto);
 
         var validation = new CategoryValidator()
             .RuleName()
@@ -65,18 +75,20 @@ public class CategoriesController : ControllerBase
         var categoryCreated = _unitOfWork.CategoryRepository.Create(category);
         _unitOfWork.Commit();
 
+        var categoryCreatedDto = _mapper.Map<CategoryDTO>(categoryCreated);
         return new CreatedAtRouteResult("GetCategory",
-            new { id = category.CategoryId }, categoryCreated);
+            new { id = categoryCreatedDto.CategoryId }, categoryCreatedDto);
     }
 
     [HttpPut("{id:int:min(1)}")]
-    public ActionResult Put(int id, Category category)
+    public ActionResult<CategoryDTO> Put(int id, CategoryDTO categoryDto)
     {
-        if (id != category.CategoryId)
+        if (id != categoryDto.CategoryId)
         {
             return BadRequest($"CategoryId {id} is not equal to id in Category");
         }
 
+        var category = _mapper.Map<Category>(categoryDto);
         var validation = new CategoryValidator()
             .RuleName()
             .Validate(category);
@@ -94,11 +106,12 @@ public class CategoriesController : ControllerBase
         var categoryChaged = _unitOfWork.CategoryRepository.Update(category);
         _unitOfWork.Commit();
 
-        return Ok(categoryChaged);
+        var categoryChangedDto = _mapper.Map<CategoryDTO>(categoryChaged);
+        return Ok(categoryChangedDto);
     }
 
     [HttpDelete("{id:int:min(1)}")]
-    public ActionResult Delete(int id)
+    public ActionResult<CategoryDTO> Delete(int id)
     {
         var category = _unitOfWork.CategoryRepository.Get(c =>  c.CategoryId == id);
 
@@ -110,6 +123,7 @@ public class CategoriesController : ControllerBase
         var categoryDeleted = _unitOfWork.CategoryRepository.Delete(category);
         _unitOfWork.Commit();
 
-        return Ok(categoryDeleted);
+        var categoryDeletedDto = _mapper.Map<CategoryDTO>(categoryDeleted);
+        return Ok(categoryDeletedDto);
     }
 }
