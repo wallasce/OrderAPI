@@ -10,18 +10,18 @@ namespace OrderAPI.Controllers;
 [ApiController]
 public class CategoriesController : ControllerBase
 {
-    private readonly ICategoryRepository _repositoryCategory;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CategoriesController(ICategoryRepository repositoryCategory)
+    public CategoriesController(IUnitOfWork unitOfWork)
     {
-        _repositoryCategory = repositoryCategory;
+        _unitOfWork = unitOfWork;
     }
 
     [HttpGet]
     [ServiceFilter(typeof(ApiLoggingFilter))]
     public ActionResult<IEnumerable<Category>> Get()
     {
-        var categories = _repositoryCategory.GetAll();
+        var categories = _unitOfWork.CategoryRepository.GetAll();
         if (categories is null)
         {
             return NotFound("No categories was founded.");
@@ -32,7 +32,7 @@ public class CategoriesController : ControllerBase
     [HttpGet("{id:int:min(1)}", Name = "GetCategory")]
     public ActionResult<Category> Get(int id)
     {
-        var category = _repositoryCategory.Get(c => c.CategoryId == id);
+        var category = _unitOfWork.CategoryRepository.Get(c => c.CategoryId == id);
         if (category == null)
         {
             return NotFound($"Product with id {id} not found");
@@ -62,7 +62,9 @@ public class CategoriesController : ControllerBase
             return BadRequest(errorStr);
         }
 
-        var categoryCreated = _repositoryCategory.Create(category);
+        var categoryCreated = _unitOfWork.CategoryRepository.Create(category);
+        _unitOfWork.Commit();
+
         return new CreatedAtRouteResult("GetCategory",
             new { id = category.CategoryId }, categoryCreated);
     }
@@ -89,21 +91,25 @@ public class CategoriesController : ControllerBase
             return BadRequest(errorStr);
         }
 
-        var categoryChaged = _repositoryCategory.Update(category);
+        var categoryChaged = _unitOfWork.CategoryRepository.Update(category);
+        _unitOfWork.Commit();
+
         return Ok(categoryChaged);
     }
 
     [HttpDelete("{id:int:min(1)}")]
     public ActionResult Delete(int id)
     {
-        var category = _repositoryCategory.Get(c =>  c.CategoryId == id);
+        var category = _unitOfWork.CategoryRepository.Get(c =>  c.CategoryId == id);
 
         if (category == null)
         {
             return NotFound($"Product with id {id} not found");
         }
 
-        var categoryDeleted = _repositoryCategory.Delete(category);
+        var categoryDeleted = _unitOfWork.CategoryRepository.Delete(category);
+        _unitOfWork.Commit();
+
         return Ok(categoryDeleted);
     }
 }
